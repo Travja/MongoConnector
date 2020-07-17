@@ -1,26 +1,28 @@
 package me.travja.mongo;
 
-import com.mongodb.*;
+import com.mongodb.Block;
+import com.mongodb.MongoClient;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
-import static com.mongodb.client.model.Updates.*;
-
-import com.mongodb.client.model.InsertOneOptions;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 import me.travja.utils.menu.Menu;
 import me.travja.utils.menu.MenuOption;
 import me.travja.utils.utils.IOUtils;
-import org.bson.*;
+import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
 import java.util.regex.Pattern;
 
 import static com.mongodb.client.model.Filters.*;
+import static com.mongodb.client.model.Updates.set;
+import static com.mongodb.client.model.Updates.unset;
 
 public class MongoTester {
 
@@ -32,33 +34,32 @@ public class MongoTester {
 
     private Menu menu = new Menu("What would you like to do?",
             new MenuOption("Create", () -> {
-                String[] fields = {"person.first_name", "person.last_name", "person.gender", "person.nick_name","cell_phone_number", "pet", "address.street","address.city","address.state","address.zip_code","home.email","home.phone_number","work.email","work.phone_number","skill","car.year","car.make","car.model"};
+                String[] fields = {"person.first_name", "person.last_name", "person.gender", "person.nick_name", "cell_phone_number", "pet", "address.street", "address.city", "address.state", "address.zip_code", "home.email", "home.phone_number", "work.email", "work.phone_number", "skill", "car.year", "car.make", "car.model"};
                 ArrayList<String> nonNulls = new ArrayList<>(Arrays.asList("person.first_name", "person.last_name", "person.gender", "address.street", "address.city", "address.state", "address.zip_code"));
                 Document doc = new Document();
-                doc.append("person", new Document().append("first_name", "").append("last_name","").append("nick_name", ""))
+                doc.append("person", new Document().append("first_name", "").append("last_name", "").append("nick_name", ""))
                         .append("cell_phone_number", "").append("pet", new String[0])
-                        .append("address", new Document().append("street","").append("city","").append("state","").append("zip_code",""))
-                        .append("home", new Document().append("email","").append("phone_number",""))
-                        .append("work", new Document().append("email","").append("phone_number",""))
+                        .append("address", new Document().append("street", "").append("city", "").append("state", "").append("zip_code", ""))
+                        .append("home", new Document().append("email", "").append("phone_number", ""))
+                        .append("work", new Document().append("email", "").append("phone_number", ""))
                         .append("skill", new String[0])
-                        .append("car", new Document().append("year",0).append("make","").append("model",""));
+                        .append("car", new Document().append("year", 0).append("make", "").append("model", ""));
 
                 boolean carError;
-                for(String s : fields) {
+                for (String s : fields) {
                     String value;
                     int it = 0;
                     do {
                         carError = false;
-                        if(it > 0) {
+                        if (it > 0) {
                             System.out.println("This field may not be nullable or you may have entered incorrect information\nPlease try again");
                         }
                         value = IOUtils.promptForString("Enter a value for the field \"" + s + "\" (enter null to not fill):");
                         it++;
-                        if(s.equals("car.year")) {
-                            if(value.toLowerCase().equals("null")) {
-                                ((Document)doc.get("car")).remove("year");
-                            }
-                            else {
+                        if (s.equals("car.year")) {
+                            if (value.toLowerCase().equals("null")) {
+                                ((Document) doc.get("car")).remove("year");
+                            } else {
                                 try {
                                     Integer.parseInt(value);
                                     ((Document) doc.get("car")).put("year", Integer.parseInt(value));
@@ -67,34 +68,29 @@ public class MongoTester {
                                     System.out.println("The car.year field must have a valid year entered");
                                 }
                             }
-                        }
-                        else if(s.equals("person.gender")) {
+                        } else if (s.equals("person.gender")) {
                             value = value.toUpperCase();
                         }
                     } while (carError || (value.toLowerCase().equals("null") && nonNulls.contains(s)) || (s.equals("person.gender") && !(value.equals("M") || value.equals("F"))));
-                    if(!value.equals("null") && (s.equals("pet") || s.equals("skill")) ) {
+                    if (!value.equals("null") && (s.equals("pet") || s.equals("skill"))) {
                         ArrayList<String> values = new ArrayList<>();
                         values.add(value);
-                        while(IOUtils.promptForBoolean("Add another value for this field? (y/n)", "y", "n")) {
+                        while (IOUtils.promptForBoolean("Add another value for this field? (y/n)", "y", "n")) {
                             values.add(IOUtils.promptForString("Enter a value for the field \"" + s + "\":"));
                         }
                         String[] arr = values.toArray(new String[0]);
                         doc.replace(s, Arrays.asList(arr));
-                    }
-                    else if(!s.equals("car.year")) {
+                    } else if (!s.equals("car.year")) {
                         int endIndex = s.contains(".") ? s.indexOf(".") : s.length();
-                        if(value.toLowerCase().equals("null")) {
-                            if(s.contains(".")) {
-                                ((Document) doc.get(s.substring(0, endIndex))).remove(s.substring(s.indexOf(".")+1));
-                            }
-                            else {
+                        if (value.toLowerCase().equals("null")) {
+                            if (s.contains(".")) {
+                                ((Document) doc.get(s.substring(0, endIndex))).remove(s.substring(endIndex + 1));
+                            } else {
                                 doc.remove(s);
                             }
-                        }
-                        else if(s.contains(".")) {
-                            ((Document) doc.get(s.substring(0, endIndex))).replace(s.substring(s.indexOf(".")+1), value);
-                        }
-                        else {
+                        } else if (s.contains(".")) {
+                            ((Document) doc.get(s.substring(0, endIndex))).replace(s.substring(endIndex + 1), value);
+                        } else {
                             doc.replace(s, value);
                         }
                     }
@@ -106,10 +102,10 @@ public class MongoTester {
                 do {
                     String field = IOUtils.promptForString("Enter the field: ");
                     String value;
-                    if(field.equals("car.year")) {
-                        boolean fail;
-                        do {
-                            value = IOUtils.promptForString("Enter the value to search for: ");
+                    boolean fail = false;
+                    do {
+                        value = IOUtils.promptForString("Enter the value to search for: ");
+                        if (field.equals("car.year")) {
                             fail = false;
                             try {
                                 docs.add(eq(field, Integer.parseInt(value)));
@@ -117,12 +113,10 @@ public class MongoTester {
                                 System.out.println("Please enter a year");
                                 fail = true;
                             }
-                        } while(fail);
-                    }
-                    else {
-                        value = IOUtils.promptForString("Enter the value to search for: ");
-                        docs.add(regex(field, Pattern.compile(value, Pattern.CASE_INSENSITIVE)));
-                    }
+                        } else {
+                            docs.add(regex(field, Pattern.compile(value, Pattern.CASE_INSENSITIVE)));
+                        }
+                    } while (fail);
                 } while (IOUtils.promptForBoolean("Use another field? (y/n)", "y", "n"));
 
                 FindIterable<Document> col = collection.find(and(docs));
@@ -139,7 +133,7 @@ public class MongoTester {
                 do {
                     String field = IOUtils.promptForString("Enter the field to search for: ");
                     String value;
-                    if(field.equals("car.year")) {
+                    if (field.equals("car.year")) {
                         boolean fail;
                         do {
                             value = IOUtils.promptForString("Enter the value to search for: ");
@@ -150,9 +144,8 @@ public class MongoTester {
                                 System.out.println("Please enter a year");
                                 fail = true;
                             }
-                        } while(fail);
-                    }
-                    else {
+                        } while (fail);
+                    } else {
                         value = IOUtils.promptForString("Enter the value to search for: ");
                         searchVals.add(regex(field, Pattern.compile(value, Pattern.CASE_INSENSITIVE)));
                     }
@@ -161,10 +154,9 @@ public class MongoTester {
                 do {
                     String field = IOUtils.promptForString("Enter the field to update or remove: ");
                     String value = IOUtils.promptForString("Enter the value to update to (type null to remove field): ");
-                    if(value.equals("null")) {
+                    if (value.equals("null")) {
                         updateVals.add(unset(field));
-                    }
-                    else {
+                    } else {
                         updateVals.add(set(field, value));
                     }
                 } while (IOUtils.promptForBoolean("Update another field? (y/n)", "y", "n"));
@@ -177,7 +169,7 @@ public class MongoTester {
                 do {
                     String field = IOUtils.promptForString("Enter the field: ");
                     String value;
-                    if(field.equals("car.year")) {
+                    if (field.equals("car.year")) {
                         boolean fail;
                         do {
                             value = IOUtils.promptForString("Enter the value to search for: ");
@@ -188,9 +180,8 @@ public class MongoTester {
                                 System.out.println("Please enter a year");
                                 fail = true;
                             }
-                        } while(fail);
-                    }
-                    else {
+                        } while (fail);
+                    } else {
                         value = IOUtils.promptForString("Enter the value to search for: ");
                         docs.add(regex(field, Pattern.compile("^" + value + "$", Pattern.CASE_INSENSITIVE)));
                     }
