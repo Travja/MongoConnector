@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: com.github.Travja:TravjaUtils:v1.0.01">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/github/Travja/TravjaUtils/v1.0.01/TravjaUtils-v1.0.01.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/com/github/Travja/TravjaUtils/v1.0.01/TravjaUtils-v1.0.01-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/github/Travja/TravjaUtils/v1.0.01/TravjaUtils-v1.0.01-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

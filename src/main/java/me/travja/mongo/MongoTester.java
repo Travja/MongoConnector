@@ -1,21 +1,24 @@
 package me.travja.mongo;
 
-import com.mongodb.Block;
-import com.mongodb.MongoClient;
+import com.mongodb.*;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
+import static com.mongodb.client.model.Updates.*;
 import com.mongodb.client.result.DeleteResult;
+import com.mongodb.client.result.UpdateResult;
+import com.mongodb.operation.UpdateOperation;
 import me.travja.utils.menu.Menu;
 import me.travja.utils.menu.MenuOption;
 import me.travja.utils.utils.IOUtils;
-import org.bson.Document;
+import org.bson.*;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 import static com.mongodb.client.model.Filters.*;
@@ -29,7 +32,7 @@ public class MongoTester {
     private MongoCollection<Document> collection;
 
     private Menu menu = new Menu("What would you like to do?",
-            new MenuOption("Search", () -> {
+            new MenuOption("Search (Read)", () -> {
                 ArrayList<Bson> docs = new ArrayList<>();
                 do {
                     String field = IOUtils.promptForString("Enter the field: ");
@@ -43,6 +46,32 @@ public class MongoTester {
                     System.out.println("No data found");
 
                 col.forEach(printBlock);
+            }),
+            new MenuOption("Update", () -> {
+                ArrayList<Bson> searchVals = new ArrayList<>();
+                ArrayList<Bson> updateVals = new ArrayList<>();
+                DBObject search = new BasicDBObject();
+                DBObject update = new BasicDBObject();
+
+                do {
+                    String field = IOUtils.promptForString("Enter the field to search for: ");
+                    String value = IOUtils.promptForString("Enter the value to search for: ");
+                    searchVals.add(eq(field, value));
+                } while (IOUtils.promptForBoolean("Use another field? (y/n)", "y", "n"));
+
+                do {
+                    String field = IOUtils.promptForString("Enter the field to update or remove: ");
+                    String value = IOUtils.promptForString("Enter the value to update to (type null to remove field): ");
+                    if(value.equals("null")) {
+                        updateVals.add(unset(field));
+                    }
+                    else {
+                        updateVals.add(set(field, value));
+                    }
+                } while (IOUtils.promptForBoolean("Update another field? (y/n)", "y", "n"));
+
+                UpdateResult result = collection.updateMany(and(searchVals), and(updateVals));
+                System.out.println(result);
             }),
             new MenuOption("Delete", () -> {
                 String field = IOUtils.promptForString("Enter the field to match: ");
@@ -91,7 +120,6 @@ public class MongoTester {
             mongo.close();
             return;
         }
-
         db = mongo.getDatabase(IOUtils.promptForString("Enter the database name: "));
 
         try {
