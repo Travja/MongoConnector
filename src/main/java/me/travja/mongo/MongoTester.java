@@ -105,8 +105,24 @@ public class MongoTester {
                 ArrayList<Bson> docs = new ArrayList<>();
                 do {
                     String field = IOUtils.promptForString("Enter the field: ");
-                    String value = IOUtils.promptForString("Enter the value to search for: ");
-                    docs.add(regex(field, Pattern.compile(value, Pattern.CASE_INSENSITIVE)));
+                    String value;
+                    if(field.equals("car.year")) {
+                        boolean fail;
+                        do {
+                            value = IOUtils.promptForString("Enter the value to search for: ");
+                            fail = false;
+                            try {
+                                docs.add(eq(field, Integer.parseInt(value)));
+                            } catch (NumberFormatException nfe) {
+                                System.out.println("Please enter a year");
+                                fail = true;
+                            }
+                        } while(fail);
+                    }
+                    else {
+                        value = IOUtils.promptForString("Enter the value to search for: ");
+                        docs.add(regex(field, Pattern.compile(value, Pattern.CASE_INSENSITIVE)));
+                    }
                 } while (IOUtils.promptForBoolean("Use another field? (y/n)", "y", "n"));
 
                 FindIterable<Document> col = collection.find(and(docs));
@@ -122,8 +138,24 @@ public class MongoTester {
 
                 do {
                     String field = IOUtils.promptForString("Enter the field to search for: ");
-                    String value = IOUtils.promptForString("Enter the value to search for: ");
-                    searchVals.add(eq(field, value));
+                    String value;
+                    if(field.equals("car.year")) {
+                        boolean fail;
+                        do {
+                            value = IOUtils.promptForString("Enter the value to search for: ");
+                            fail = false;
+                            try {
+                                searchVals.add(eq(field, Integer.parseInt(value)));
+                            } catch (NumberFormatException nfe) {
+                                System.out.println("Please enter a year");
+                                fail = true;
+                            }
+                        } while(fail);
+                    }
+                    else {
+                        value = IOUtils.promptForString("Enter the value to search for: ");
+                        searchVals.add(regex(field, Pattern.compile(value, Pattern.CASE_INSENSITIVE)));
+                    }
                 } while (IOUtils.promptForBoolean("Use another field? (y/n)", "y", "n"));
 
                 do {
@@ -144,8 +176,24 @@ public class MongoTester {
                 ArrayList<Bson> docs = new ArrayList<>();
                 do {
                     String field = IOUtils.promptForString("Enter the field: ");
-                    String value = IOUtils.promptForString("Enter the value to search for: ");
-                    docs.add(regex(field, Pattern.compile("^" + value + "$", Pattern.CASE_INSENSITIVE)));
+                    String value;
+                    if(field.equals("car.year")) {
+                        boolean fail;
+                        do {
+                            value = IOUtils.promptForString("Enter the value to search for: ");
+                            fail = false;
+                            try {
+                                docs.add(eq(field, Integer.parseInt(value)));
+                            } catch (NumberFormatException nfe) {
+                                System.out.println("Please enter a year");
+                                fail = true;
+                            }
+                        } while(fail);
+                    }
+                    else {
+                        value = IOUtils.promptForString("Enter the value to search for: ");
+                        docs.add(regex(field, Pattern.compile("^" + value + "$", Pattern.CASE_INSENSITIVE)));
+                    }
                 } while (IOUtils.promptForBoolean("Use another field? (y/n)", "y", "n"));
 
                 DeleteResult result;
